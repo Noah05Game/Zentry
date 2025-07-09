@@ -11,6 +11,14 @@
   <div class="bg-white shadow-lg rounded-xl p-8 max-w-xl w-full text-center">
     <h1 class="text-3xl font-bold mb-4">Welcome to your Dashboard</h1>
     <p id="user-info" class="mb-6 text-gray-600"></p>
+
+    <!-- Admin button (only visible to your email) -->
+    <div id="admin-section" class="mb-4 hidden">
+      <a href="admin.html" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+        Admin Panel
+      </a>
+    </div>
+
     <button
       id="logout"
       class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
@@ -25,7 +33,7 @@
     import {
       getAuth,
       onAuthStateChanged,
-      signOutA
+      signOut
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -41,17 +49,23 @@
     const auth = getAuth(app);
 
     const userInfo = document.getElementById("user-info");
+    const adminSection = document.getElementById("admin-section");
 
-    // Check login state
     onAuthStateChanged(auth, (user) => {
       if (user) {
         userInfo.textContent = `Logged in as ${user.email}`;
+
+        // Only show admin button to your email
+        if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
+          adminSection.classList.remove("hidden");
+        }
+
       } else {
-        window.location.href = "login.html"; // Redirect if not logged in
+        window.location.href = "login.html"; // redirect to login if not authenticated
       }
     });
 
-    // Logout
+    // Log out
     document.getElementById("logout").addEventListener("click", () => {
       signOut(auth).then(() => {
         window.location.href = "login.html";
