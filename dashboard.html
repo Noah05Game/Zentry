@@ -10,7 +10,7 @@
 
   <div class="bg-white shadow-lg rounded-xl p-8 max-w-xl w-full text-center">
     <h1 class="text-3xl font-bold mb-4">Welcome to your Dashboard</h1>
-    <p id="user-info" class="mb-6 text-gray-600">Loading...</p>
+    <p id="user-info" class="mb-6 text-gray-600">Checking login status...</p>
 
     <!-- Tool Buttons -->
     <div class="flex flex-col gap-4 mt-6">
@@ -18,7 +18,7 @@
       <a href="sparx.html" id="btn-sparx" class="bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition">Sparx Cheats</a>
     </div>
 
-    <!-- Admin Button (Only if user is you) -->
+    <!-- Admin Button (Only for your email) -->
     <a href="admin.html" id="admin-button" class="hidden mt-6 inline-block bg-black text-white px-4 py-2 rounded hover:bg-gray-800">Admin</a>
 
     <!-- Logout -->
@@ -65,42 +65,45 @@
 
     // Check if user is logged in
     onAuthStateChanged(auth, (user) => {
-      if (user) {
+      if (user && user.email) {
         userInfo.textContent = `Logged in as ${user.email}`;
-        
+
         // Show admin button if email matches
         if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
           adminBtn.classList.remove("hidden");
         }
+
+        // Listen for toggle state
+        onValue(ref(db, "features/blooketHacks"), (snapshot) => {
+          const enabled = snapshot.val();
+          toggleFeature(btnBlooket, enabled);
+        });
+
+        onValue(ref(db, "features/sparxCheats"), (snapshot) => {
+          const enabled = snapshot.val();
+          toggleFeature(btnSparx, enabled);
+        });
+
       } else {
-        window.location.href = "login.html";
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 300); // slight delay to prevent flicker
       }
     });
+
+    function toggleFeature(button, enabled) {
+      if (!enabled) {
+        button.classList.add("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      } else {
+        button.classList.remove("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      }
+    }
 
     // Logout
     document.getElementById("logout").addEventListener("click", () => {
       signOut(auth).then(() => {
         window.location.href = "login.html";
       });
-    });
-
-    // Feature toggle listener
-    onValue(ref(db, "features/blooketHacks"), (snapshot) => {
-      const enabled = snapshot.val();
-      if (!enabled) {
-        btnBlooket.classList.add("opacity-50", "pointer-events-none", "cursor-not-allowed");
-      } else {
-        btnBlooket.classList.remove("opacity-50", "pointer-events-none", "cursor-not-allowed");
-      }
-    });
-
-    onValue(ref(db, "features/sparxCheats"), (snapshot) => {
-      const enabled = snapshot.val();
-      if (!enabled) {
-        btnSparx.classList.add("opacity-50", "pointer-events-none", "cursor-not-allowed");
-      } else {
-        btnSparx.classList.remove("opacity-50", "pointer-events-none", "cursor-not-allowed");
-      }
     });
   </script>
 </body>
