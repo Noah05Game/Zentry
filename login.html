@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -11,7 +11,7 @@
   <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
     <!-- Logo -->
     <div class="flex justify-center mb-4">
-      <img src="/logo-light.png" alt="Logo" class="w-12 h-12" />
+      <img src="logo-light.png" alt="Logo" class="w-12 h-12" />
     </div>
 
     <!-- Heading -->
@@ -91,10 +91,9 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful!");
-        window.location.href = "index.html"; // or your dashboard page
+        window.location.href = "dashboard.html"; // ✅ Redirect after login
       } catch (error) {
-        alert(error.message);
+        alert("Error: " + error.message);
       }
     });
 
@@ -102,10 +101,9 @@
     document.getElementById("google-login").addEventListener("click", async () => {
       try {
         await signInWithPopup(auth, provider);
-        alert("Google login successful!");
-        window.location.href = "index.html"; // or your dashboard page
+        window.location.href = "dashboard.html"; // ✅ Redirect after login
       } catch (error) {
-        alert(error.message);
+        alert("Error: " + error.message);
       }
     });
   </script>
