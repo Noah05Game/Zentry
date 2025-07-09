@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,10 +14,8 @@
       <img src="logo-light.png" alt="Logo" class="w-12 h-12" />
     </div>
 
-    <!-- Heading -->
     <h2 class="text-center text-2xl font-bold mb-6">Create your account</h2>
 
-    <!-- Email/Password Sign Up Form -->
     <form id="signup-form" class="space-y-4">
       <input
         type="email"
@@ -41,10 +39,8 @@
       </button>
     </form>
 
-    <!-- Divider -->
     <div class="my-4 text-center text-gray-400">or</div>
 
-    <!-- Google Signup Button -->
     <button
       id="google-signup"
       class="w-full flex items-center justify-center bg-white border text-black font-semibold py-2 px-4 rounded hover:bg-gray-100"
@@ -53,19 +49,19 @@
       Sign up with Google
     </button>
 
-    <!-- Footer -->
     <p class="mt-6 text-sm text-center text-gray-500">
       Already have an account?
       <a href="login.html" class="text-purple-600 hover:underline">Log in</a>
     </p>
   </div>
 
-  <!-- Firebase SDK & Auth Logic -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
       getAuth,
       createUserWithEmailAndPassword,
+      sendEmailVerification,
       signInWithPopup,
       GoogleAuthProvider
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -83,20 +79,26 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
+    // Handle email/password signup
     document.getElementById("signup-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("Sign up successful!");
-        window.location.href = "dashboard.html";
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await sendEmailVerification(user);
+        alert("Verification email sent. Please check your inbox.");
+        // Optionally redirect to login instead
+        window.location.href = "login.html";
       } catch (error) {
         alert(error.message);
       }
     });
 
+    // Handle Google sign-up (no verification needed)
     document.getElementById("google-signup").addEventListener("click", async () => {
       try {
         await signInWithPopup(auth, provider);
