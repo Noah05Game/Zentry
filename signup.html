@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>Sign Up</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
@@ -15,10 +15,10 @@
     </div>
 
     <!-- Heading -->
-    <h2 class="text-center text-2xl font-bold mb-6">Log in to your account</h2>
+    <h2 class="text-center text-2xl font-bold mb-6">Create an account</h2>
 
-    <!-- Email/Password Login Form -->
-    <form id="login-form" class="space-y-4">
+    <!-- Email/Password Signup Form -->
+    <form id="signup-form" class="space-y-4">
       <input
         type="email"
         id="email"
@@ -37,35 +37,35 @@
         type="submit"
         class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded"
       >
-        Log In
+        Sign Up
       </button>
     </form>
 
     <!-- Divider -->
     <div class="my-4 text-center text-gray-400">or</div>
 
-    <!-- Google Login Button -->
+    <!-- Google Signup Button -->
     <button
-      id="google-login"
+      id="google-signup"
       class="w-full flex items-center justify-center bg-white border text-black font-semibold py-2 px-4 rounded hover:bg-gray-100"
     >
       <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="w-5 h-5 mr-2" />
-      Log in with Google
+      Sign up with Google
     </button>
 
     <!-- Footer -->
     <p class="mt-6 text-sm text-center text-gray-500">
-      Don't have an account?
-      <a href="signup.html" class="text-purple-600 hover:underline">Sign up</a>
+      Already have an account?
+      <a href="login.html" class="text-purple-600 hover:underline">Log in</a>
     </p>
   </div>
 
-  <!-- Firebase SDK & Auth Logic -->
+  <!-- Firebase SDK & Auth Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
       getAuth,
-      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
       signInWithPopup,
       GoogleAuthProvider
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -83,27 +83,27 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Email/Password login
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
+    // Email/Password signup
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful!");
-        window.location.href = "index.html"; // or your dashboard page
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("Sign up successful!");
+        window.location.href = "index.html"; // redirect after signup
       } catch (error) {
         alert(error.message);
       }
     });
 
-    // Google login
-    document.getElementById("google-login").addEventListener("click", async () => {
+    // Google signup
+    document.getElementById("google-signup").addEventListener("click", async () => {
       try {
         await signInWithPopup(auth, provider);
-        alert("Google login successful!");
-        window.location.href = "index.html"; // or your dashboard page
+        alert("Google sign up successful!");
+        window.location.href = "index.html"; // redirect after signup
       } catch (error) {
         alert(error.message);
       }
