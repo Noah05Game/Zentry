@@ -6,10 +6,75 @@
   <title>Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
-  <div class="text-center">
-    <h1 class="text-4xl font-bold mb-4">Admin Panel</h1>
-    <p class="text-xl text-gray-300">Coming Soon...</p>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+  <div class="bg-gray-800 p-8 rounded-lg w-full max-w-md">
+    <h1 class="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <span>Blooket Hacks</span>
+        <input type="checkbox" id="toggle-blooket" class="w-6 h-6" />
+      </div>
+      <div class="flex items-center justify-between">
+        <span>Sparx Cheats</span>
+        <input type="checkbox" id="toggle-sparx" class="w-6 h-6" />
+      </div>
+    </div>
   </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      update
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
+      authDomain: "zentry-9dd14.firebaseapp.com",
+      projectId: "zentry-9dd14",
+      storageBucket: "zentry-9dd14.firebasestorage.app",
+      messagingSenderId: "860501594526",
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    const blooketToggle = document.getElementById("toggle-blooket");
+    const sparxToggle = document.getElementById("toggle-sparx");
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user || user.email !== "noahwilfred2022@gmail.com") {
+        alert("Access denied.");
+        window.location.href = "login.html";
+      } else {
+        const featuresRef = ref(db, "features");
+
+        // Load toggle state
+        onValue(featuresRef, (snapshot) => {
+          const data = snapshot.val();
+          blooketToggle.checked = data?.blooketHacks ?? false;
+          sparxToggle.checked = data?.sparxCheats ?? false;
+        });
+
+        // Toggle updates
+        blooketToggle.addEventListener("change", () => {
+          update(featuresRef, { blooketHacks: blooketToggle.checked });
+        });
+
+        sparxToggle.addEventListener("change", () => {
+          update(featuresRef, { sparxCheats: sparxToggle.checked });
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -10,24 +10,27 @@
 
   <div class="bg-white shadow-lg rounded-xl p-8 max-w-xl w-full text-center">
     <h1 class="text-3xl font-bold mb-4">Welcome to your Dashboard</h1>
-    <p id="user-info" class="mb-6 text-gray-600"></p>
+    <p id="user-info" class="mb-6 text-gray-600">Loading...</p>
 
-    <!-- Admin button (only visible to your email) -->
-    <div id="admin-section" class="mb-4 hidden">
-      <a href="admin.html" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
-        Admin Panel
-      </a>
+    <!-- Tool Buttons -->
+    <div class="flex flex-col gap-4 mt-6">
+      <a href="blooket.html" id="btn-blooket" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition">Blooket Hacks</a>
+      <a href="sparx.html" id="btn-sparx" class="bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition">Sparx Cheats</a>
     </div>
 
+    <!-- Admin Button (Only if user is you) -->
+    <a href="admin.html" id="admin-button" class="hidden mt-6 inline-block bg-black text-white px-4 py-2 rounded hover:bg-gray-800">Admin</a>
+
+    <!-- Logout -->
     <button
       id="logout"
-      class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
+      class="mt-8 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
     >
       Log Out
     </button>
   </div>
 
-  <!-- Firebase SDK & Auth Logic -->
+  <!-- Firebase SDK & Auth -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -35,43 +38,70 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
+      apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnxpl4bw",
       authDomain: "zentry-9dd14.firebaseapp.com",
+      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com",
       projectId: "zentry-9dd14",
-      storageBucket: "zentry-9dd14.firebasestorage.app",
+      storageBucket: "zentry-9dd14.appspot.com",
       messagingSenderId: "860501594526",
       appId: "1:860501594526:web:d254e5fa464c96c03e068f"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
 
     const userInfo = document.getElementById("user-info");
-    const adminSection = document.getElementById("admin-section");
+    const adminBtn = document.getElementById("admin-button");
+    const btnBlooket = document.getElementById("btn-blooket");
+    const btnSparx = document.getElementById("btn-sparx");
 
+    // Check if user is logged in
     onAuthStateChanged(auth, (user) => {
       if (user) {
         userInfo.textContent = `Logged in as ${user.email}`;
-
-        // Only show admin button to your email
+        
+        // Show admin button if email matches
         if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
-          adminSection.classList.remove("hidden");
+          adminBtn.classList.remove("hidden");
         }
-
       } else {
-        window.location.href = "login.html"; // redirect to login if not authenticated
+        window.location.href = "login.html";
       }
     });
 
-    // Log out
+    // Logout
     document.getElementById("logout").addEventListener("click", () => {
       signOut(auth).then(() => {
         window.location.href = "login.html";
       });
     });
-  </script>
 
+    // Feature toggle listener
+    onValue(ref(db, "features/blooketHacks"), (snapshot) => {
+      const enabled = snapshot.val();
+      if (!enabled) {
+        btnBlooket.classList.add("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      } else {
+        btnBlooket.classList.remove("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      }
+    });
+
+    onValue(ref(db, "features/sparxCheats"), (snapshot) => {
+      const enabled = snapshot.val();
+      if (!enabled) {
+        btnSparx.classList.add("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      } else {
+        btnSparx.classList.remove("opacity-50", "pointer-events-none", "cursor-not-allowed");
+      }
+    });
+  </script>
 </body>
 </html>

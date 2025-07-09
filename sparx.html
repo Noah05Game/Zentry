@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blooket Hacks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <h1 class="text-3xl font-bold mb-4">Blooket Hacks</h1>
+    <p id="status" class="text-lg text-gray-700">Loading...</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnxpl4bw",
+      authDomain: "zentry-9dd14.firebaseapp.com",
+      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com",
+      projectId: "zentry-9dd14",
+      storageBucket: "zentry-9dd14.appspot.com",
+      messagingSenderId: "860501594526",
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const statusText = document.getElementById("status");
+
+    const featureRef = ref(db, "features/sparxCheats");
+
+    onValue(featureRef, (snapshot) => {
+      const enabled = snapshot.val();
+
+      if (enabled === false) {
+        // If disabled, redirect after 2 seconds
+        statusText.textContent = "This feature has been disabled by the admin. Redirecting...";
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 2000);
+      } else {
+        statusText.textContent = "Coming Soon...";
+      }
+    });
+  </script>
+</body>
+</html>
