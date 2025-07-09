@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zentry - School Cheats</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <!-- Blinking cursor styling -->
+  <style>
+    .blinking-cursor {
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-white dark:bg-black text-gray-800 dark:text-white transition duration-300">
+
+  <!-- Navbar -->
+  <header class="flex justify-between items-center px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center space-x-3">
+      <!-- Light logo -->
+      <img src="logo-light.png" alt="Zentry Light Logo"
+           class="h-8 w-8 rounded-full block dark:hidden transition duration-300 ease-in-out">
+      <!-- Dark logo -->
+      <img src="logo-dark.png" alt="Zentry Dark Logo"
+           class="h-8 w-8 rounded-full hidden dark:block transition duration-300 ease-in-out">
+      <span class="text-xl font-semibold">Zentry</span>
+    </div>
+
+    <nav class="space-x-6 hidden md:flex">
+      <a href="#" class="hover:text-purple-500 transition">Products</a>
+      <a href="#" class="hover:text-purple-500 transition">Pricing</a>
+      <a href="#" class="hover:text-purple-500 transition">Contact Us</a>
+      <a href="#" class="hover:text-purple-500 transition">About</a>
+    </nav>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+      <span id="theme-icon">🌙</span>
+    </button>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="text-center px-4 py-20 bg-white dark:bg-black transition duration-300">
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-6">
+      School Cheats, <span id="typed-text" class="text-purple-500"></span><span class="blinking-cursor text-purple-500">|</span>
+    </h1>
+    <p class="text-gray-600 dark:text-gray-300 max-w-xl mx-auto mb-8 text-lg">
+      Everything you need — fast, simple, and all in one place.
+    </p>
+    <a href="login.html" class="inline-block bg-black dark:bg-white text-white dark:text-black font-medium px-6 py-3 rounded-full hover:scale-105 hover:opacity-90 transition-transform duration-200">
+      Get started
+    </a>
+  </section>
+
+  <!-- Theme Toggle Script -->
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const icon = document.getElementById('theme-icon');
+
+    themeToggle.addEventListener('click', () => {
+      const root = document.documentElement;
+      const isDark = root.classList.toggle('dark');
+      icon.textContent = isDark ? '🌙' : '☀️';
+    });
+  </script>
+
+  <!-- Typing Animation Script -->
+  <script>
+    const phrases = ["Made easy", "All in one place", "At your fingertips"];
+    const typedText = document.getElementById("typed-text");
+
+    let phraseIndex = 0;
+    let letterIndex = 0;
+    let isDeleting = false;
+
+    function type() {
+      const currentPhrase = phrases[phraseIndex];
+      if (isDeleting) {
+        letterIndex--;
+      } else {
+        letterIndex++;
+      }
+
+      typedText.textContent = currentPhrase.substring(0, letterIndex);
+
+      if (!isDeleting && letterIndex === currentPhrase.length) {
+        setTimeout(() => isDeleting = true, 1000);
+      } else if (isDeleting && letterIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+      }
+
+      const delay = isDeleting ? 60 : 100;
+      setTimeout(type, delay);
+    }
+
+    type();
+  </script>
+
+</body>
+</html>
