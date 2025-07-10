@@ -9,30 +9,58 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
   <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+    <!-- Logo -->
     <div class="flex justify-center mb-4">
-      <img src="/logo-light.png" alt="Logo" class="w-12 h-12" />
+      <img src="logo-light.png" alt="Logo" class="w-12 h-12" />
     </div>
 
+    <!-- Heading -->
     <h2 class="text-center text-2xl font-bold mb-6">Log in to your account</h2>
 
+    <!-- Email/Password Login Form -->
     <form id="login-form" class="space-y-4">
-      <input type="email" id="email" placeholder="Email" required class="w-full p-3 border rounded" />
-      <input type="password" id="password" placeholder="Password" required class="w-full p-3 border rounded" />
-      <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">Log In</button>
+      <input
+        type="email"
+        id="email"
+        placeholder="Email"
+        required
+        class="w-full p-3 border rounded"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        required
+        class="w-full p-3 border rounded"
+      />
+      <button
+        type="submit"
+        class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded"
+      >
+        Log In
+      </button>
     </form>
 
+    <!-- Divider -->
     <div class="my-4 text-center text-gray-400">or</div>
 
-    <button id="google-login" class="w-full flex items-center justify-center bg-white border text-black font-semibold py-2 px-4 rounded hover:bg-gray-100">
+    <!-- Google Login Button -->
+    <button
+      id="google-login"
+      class="w-full flex items-center justify-center bg-white border text-black font-semibold py-2 px-4 rounded hover:bg-gray-100"
+    >
       <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="w-5 h-5 mr-2" />
       Log in with Google
     </button>
 
+    <!-- Footer -->
     <p class="mt-6 text-sm text-center text-gray-500">
-      Don't have an account? <a href="signup.html" class="text-purple-600 hover:underline">Sign up</a>
+      Don't have an account?
+      <a href="signup.html" class="text-purple-600 hover:underline">Sign up</a>
     </p>
   </div>
 
+  <!-- Firebase SDK & Auth Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -41,41 +69,74 @@
       signInWithPopup,
       GoogleAuthProvider
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      get
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
       authDomain: "zentry-9dd14.firebaseapp.com",
       projectId: "zentry-9dd14",
-      storageBucket: "zentry-9dd14.appspot.com",
+      storageBucket: "zentry-9dd14.firebasestorage.app",
       messagingSenderId: "860501594526",
-      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f",
+      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com/"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
+    async function isBanned(email) {
+      const safeEmail = email.replace(/\./g, ",");
+      const banRef = ref(db, "banned/" + safeEmail);
+      const snapshot = await get(banRef);
+      return snapshot.exists();
+    }
+
+    async function trackUser(user, page) {
+      const userRef = ref(db, "users/" + user.uid);
+      await set(userRef, {
+        email: user.email,
+        page: page
+      });
+    }
+
+    // Email login
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful!");
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        if (await isBanned(email)) {
+          window.location.href = "banned.html";
+          return;
+        }
+        await trackUser(result.user, "dashboard");
         window.location.href = "dashboard.html";
-      } catch (error) {
-        alert(error.message);
+      } catch (err) {
+        alert(err.message);
       }
     });
 
+    // Google login
     document.getElementById("google-login").addEventListener("click", async () => {
       try {
-        await signInWithPopup(auth, provider);
-        alert("Google login successful!");
+        const result = await signInWithPopup(auth, provider);
+        if (await isBanned(result.user.email)) {
+          window.location.href = "banned.html";
+          return;
+        }
+        await trackUser(result.user, "dashboard");
         window.location.href = "dashboard.html";
-      } catch (error) {
-        alert(error.message);
+      } catch (err) {
+        alert(err.message);
       }
     });
   </script>

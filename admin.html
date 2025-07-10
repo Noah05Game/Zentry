@@ -6,20 +6,32 @@
   <title>Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
-  <div class="bg-gray-800 p-8 rounded-lg w-full max-w-md">
-    <h1 class="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
+<body class="bg-gray-900 text-white min-h-screen py-10 px-4">
+  <div class="max-w-4xl mx-auto space-y-10">
+    <h1 class="text-4xl font-bold text-center mb-4">Zentry Admin Panel</h1>
 
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <span>Blooket Hacks</span>
-        <input type="checkbox" id="toggle-blooket" class="w-6 h-6" />
-      </div>
-      <div class="flex items-center justify-between">
-        <span>Sparx Cheats</span>
-        <input type="checkbox" id="toggle-sparx" class="w-6 h-6" />
-      </div>
-    </div>
+    <!-- Online Users -->
+    <section class="bg-gray-800 rounded-xl p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Currently Logged-In Users</h2>
+      <ul id="user-list" class="space-y-3"></ul>
+    </section>
+
+    <!-- Ban/Kick Form -->
+    <section class="bg-gray-800 rounded-xl p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4">Manage User</h2>
+      <form id="admin-form" class="space-y-4">
+        <input type="email" id="admin-email" placeholder="User email" required class="w-full p-3 rounded text-black" />
+        <select id="admin-action" class="w-full p-3 rounded text-black">
+          <option value="kick">Kick</option>
+          <option value="ban">Ban</option>
+          <option value="unban">Unban</option>
+        </select>
+        <input type="text" id="ban-reason" placeholder="Ban reason (optional)" class="w-full p-3 rounded text-black" />
+        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded">
+          Apply Action
+        </button>
+      </form>
+    </section>
   </div>
 
   <script type="module">
@@ -28,12 +40,9 @@
       getDatabase,
       ref,
       onValue,
-      update
+      set,
+      remove
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
@@ -41,38 +50,62 @@
       projectId: "zentry-9dd14",
       storageBucket: "zentry-9dd14.firebasestorage.app",
       messagingSenderId: "860501594526",
-      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f",
+      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com/"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app);
+    const usersRef = ref(db, "users");
 
-    const blooketToggle = document.getElementById("toggle-blooket");
-    const sparxToggle = document.getElementById("toggle-sparx");
+    // Live user list
+    const userList = document.getElementById("user-list");
+    onValue(usersRef, (snapshot) => {
+      userList.innerHTML = "";
+      snapshot.forEach((child) => {
+        const { email, page } = child.val();
+        const li = document.createElement("li");
+        li.className = "bg-gray-700 p-4 rounded flex justify-between items-center";
+        li.innerHTML = `
+          <div>
+            <div class="font-medium">${email}</div>
+            <div class="text-sm text-gray-300">Page: ${page}</div>
+          </div>
+          <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded" onclick="kickUser('${child.key}')">Kick</button>
+        `;
+        userList.appendChild(li);
+      });
+    });
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user || user.email !== "noahwilfred2022@gmail.com") {
-        alert("Access denied.");
-        window.location.href = "login.html";
-      } else {
-        const featuresRef = ref(db, "features");
+    // Expose kick function
+    window.kickUser = (uid) => {
+      remove(ref(db, "users/" + uid));
+      alert("User kicked!");
+    };
 
-        // Load toggle state
-        onValue(featuresRef, (snapshot) => {
-          const data = snapshot.val();
-          blooketToggle.checked = data?.blooketHacks ?? false;
-          sparxToggle.checked = data?.sparxCheats ?? false;
-        });
+    // Admin actions
+    document.getElementById("admin-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("admin-email").value.toLowerCase();
+      const action = document.getElementById("admin-action").value;
+      const reason = document.getElementById("ban-reason").value.trim();
+      const safeEmail = email.replace(/\./g, ",");
 
-        // Toggle updates
-        blooketToggle.addEventListener("change", () => {
-          update(featuresRef, { blooketHacks: blooketToggle.checked });
-        });
-
-        sparxToggle.addEventListener("change", () => {
-          update(featuresRef, { sparxCheats: sparxToggle.checked });
-        });
+      if (action === "ban") {
+        await set(ref(db, "banned/" + safeEmail), reason || "No reason provided.");
+        alert("User banned.");
+      } else if (action === "unban") {
+        await remove(ref(db, "banned/" + safeEmail));
+        alert("User unbanned.");
+      } else if (action === "kick") {
+        onValue(usersRef, (snapshot) => {
+          snapshot.forEach((child) => {
+            if (child.val().email.toLowerCase() === email) {
+              remove(ref(db, "users/" + child.key));
+              alert("User kicked.");
+            }
+          });
+        }, { onlyOnce: true });
       }
     });
   </script>

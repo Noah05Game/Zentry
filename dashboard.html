@@ -10,26 +10,21 @@
 
   <div class="bg-white shadow-lg rounded-xl p-8 max-w-xl w-full text-center">
     <h1 class="text-3xl font-bold mb-4">Welcome to your Dashboard</h1>
-    <p id="user-info" class="mb-6 text-gray-600">Checking login status...</p>
-
-    <!-- Feature buttons -->
-    <div class="space-y-4">
-      <button class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded cursor-not-allowed" disabled>Blooket Hacks (Coming Soon)</button>
-      <button class="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded cursor-not-allowed" disabled>Sparx Cheats (Coming Soon)</button>
+    <p id="user-info" class="mb-6 text-gray-600"></p>
+    <div id="admin-section" class="mb-6 hidden">
+      <a href="admin.html" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded">
+        Admin Panel
+      </a>
     </div>
-
-    <!-- Admin button -->
-    <a id="admin-button" href="admin.html"
-       class="mt-6 inline-block bg-black text-white px-4 py-2 rounded hidden">Admin Panel</a>
-
-    <!-- Logout -->
-    <button id="logout"
-            class="mt-6 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded">
+    <button
+      id="logout"
+      class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
+    >
       Log Out
     </button>
   </div>
 
-  <!-- Firebase SDK and logic -->
+  <!-- Firebase SDK & Auth Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -37,28 +32,52 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      get
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
       authDomain: "zentry-9dd14.firebaseapp.com",
       projectId: "zentry-9dd14",
-      storageBucket: "zentry-9dd14.appspot.com",
+      storageBucket: "zentry-9dd14.firebasestorage.app",
       messagingSenderId: "860501594526",
-      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f",
+      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com/"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getDatabase(app);
 
     const userInfo = document.getElementById("user-info");
-    const adminBtn = document.getElementById("admin-button");
+    const adminSection = document.getElementById("admin-section");
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        userInfo.textContent = `Logged in as ${user.email}`;
-        if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
-          adminBtn.classList.remove("hidden");
+        const safeEmail = user.email.replace(/\./g, ",");
+        const banSnap = await get(ref(db, "banned/" + safeEmail));
+        if (banSnap.exists()) {
+          window.location.href = "banned.html";
+          return;
         }
+
+        // Track user
+        await set(ref(db, "users/" + user.uid), {
+          email: user.email,
+          page: "dashboard"
+        });
+
+        userInfo.textContent = `Logged in as ${user.email}`;
+
+        // Show admin panel link if it's you
+        if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
+          adminSection.classList.remove("hidden");
+        }
+
       } else {
         window.location.href = "login.html";
       }
