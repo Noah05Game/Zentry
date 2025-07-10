@@ -11,20 +11,31 @@
   <div class="bg-white shadow-lg rounded-xl p-8 max-w-xl w-full text-center">
     <h1 class="text-3xl font-bold mb-4">Welcome to your Dashboard</h1>
     <p id="user-info" class="mb-6 text-gray-600"></p>
-    <div id="admin-section" class="mb-6 hidden">
-      <a href="admin.html" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded">
+
+    <!-- Buttons -->
+    <div class="space-y-3 mb-6">
+      <button class="bg-gray-400 text-white px-4 py-2 rounded w-full" disabled>Blooket Hacks (Coming Soon...)</button>
+      <button class="bg-gray-400 text-white px-4 py-2 rounded w-full" disabled>Sparx Cheats (Coming Soon...)</button>
+      <button class="bg-gray-400 text-white px-4 py-2 rounded w-full" disabled>Other Feature (Coming Soon...)</button>
+    </div>
+
+    <!-- Admin Button (hidden by default) -->
+    <div id="admin-button" class="mb-4 hidden">
+      <a href="admin.html" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded">
         Admin Panel
       </a>
     </div>
+
+    <!-- Logout -->
     <button
       id="logout"
-      class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
+      class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded w-full"
     >
       Log Out
     </button>
   </div>
 
-  <!-- Firebase SDK & Auth Logic -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -32,12 +43,6 @@
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      get
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
@@ -45,44 +50,29 @@
       projectId: "zentry-9dd14",
       storageBucket: "zentry-9dd14.firebasestorage.app",
       messagingSenderId: "860501594526",
-      appId: "1:860501594526:web:d254e5fa464c96c03e068f",
-      databaseURL: "https://zentry-9dd14-default-rtdb.firebaseio.com/"
+      appId: "1:860501594526:web:d254e5fa464c96c03e068f"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getDatabase(app);
 
     const userInfo = document.getElementById("user-info");
-    const adminSection = document.getElementById("admin-section");
+    const adminButton = document.getElementById("admin-button");
 
-    onAuthStateChanged(auth, async (user) => {
+    // Auth check
+    onAuthStateChanged(auth, (user) => {
       if (user) {
-        const safeEmail = user.email.replace(/\./g, ",");
-        const banSnap = await get(ref(db, "banned/" + safeEmail));
-        if (banSnap.exists()) {
-          window.location.href = "banned.html";
-          return;
-        }
-
-        // Track user
-        await set(ref(db, "users/" + user.uid), {
-          email: user.email,
-          page: "dashboard"
-        });
-
         userInfo.textContent = `Logged in as ${user.email}`;
-
-        // Show admin panel link if it's you
+        // Show admin panel if email matches
         if (user.email.toLowerCase() === "noahwilfred2022@gmail.com") {
-          adminSection.classList.remove("hidden");
+          adminButton.classList.remove("hidden");
         }
-
       } else {
         window.location.href = "login.html";
       }
     });
 
+    // Logout
     document.getElementById("logout").addEventListener("click", () => {
       signOut(auth).then(() => {
         window.location.href = "login.html";
