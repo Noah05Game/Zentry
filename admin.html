@@ -2,38 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white min-h-screen py-10 px-4">
-  <div class="max-w-4xl mx-auto space-y-10">
-    <h1 class="text-4xl font-bold text-center mb-4">Zentry Admin Panel</h1>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
 
-    <!-- Online Users -->
-    <section class="bg-gray-800 rounded-xl p-6 shadow-lg">
-      <h2 class="text-2xl font-semibold mb-4">Currently Logged-In Users</h2>
-      <ul id="user-list" class="space-y-3"></ul>
-    </section>
+  <div class="w-full max-w-2xl bg-gray-800 p-8 rounded-xl shadow-md">
+    <h1 class="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
 
-    <!-- Ban/Kick Form -->
-    <section class="bg-gray-800 rounded-xl p-6 shadow-lg">
-      <h2 class="text-2xl font-semibold mb-4">Manage User</h2>
-      <form id="admin-form" class="space-y-4">
-        <input type="email" id="admin-email" placeholder="User email" required class="w-full p-3 rounded text-black" />
-        <select id="admin-action" class="w-full p-3 rounded text-black">
-          <option value="kick">Kick</option>
-          <option value="ban">Ban</option>
-          <option value="unban">Unban</option>
-        </select>
-        <input type="text" id="ban-reason" placeholder="Ban reason (optional)" class="w-full p-3 rounded text-black" />
-        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded">
-          Apply Action
-        </button>
+    <!-- ✅ Message display -->
+    <div id="status-message" class="text-sm text-center mb-4"></div>
+
+    <!-- 👥 Logged-in Users Section -->
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold mb-2">Active Users</h2>
+      <ul id="active-users" class="space-y-2">
+        <li class="text-gray-400 italic">Loading users...</li>
+      </ul>
+    </div>
+
+    <!-- 🛑 Manual Actions -->
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold mb-2">Manage Users</h2>
+      <form id="admin-action-form" class="space-y-4">
+        <input
+          type="email"
+          id="target-email"
+          placeholder="Enter user email"
+          required
+          class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600"
+        />
+        <div class="flex gap-3">
+          <button type="button" id="kick-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded w-full">Kick</button>
+          <button type="button" id="ban-btn" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded w-full">Ban</button>
+          <button type="button" id="unban-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded w-full">Unban</button>
+        </div>
       </form>
-    </section>
+    </div>
+
+    <!-- 🔧 Placeholder (toggle buttons etc.) -->
+    <div class="text-center text-gray-400 text-sm">
+      More features coming soon...
+    </div>
   </div>
 
+  <!-- ✅ Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -43,6 +57,10 @@
       set,
       remove
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA3_pQbii_2wIGRLkoWwMo9FbOnpXpl4bw",
@@ -56,58 +74,80 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const usersRef = ref(db, "users");
+    const auth = getAuth(app);
 
-    // Live user list
-    const userList = document.getElementById("user-list");
-    onValue(usersRef, (snapshot) => {
-      userList.innerHTML = "";
-      snapshot.forEach((child) => {
-        const { email, page } = child.val();
-        const li = document.createElement("li");
-        li.className = "bg-gray-700 p-4 rounded flex justify-between items-center";
-        li.innerHTML = `
-          <div>
-            <div class="font-medium">${email}</div>
-            <div class="text-sm text-gray-300">Page: ${page}</div>
-          </div>
-          <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded" onclick="kickUser('${child.key}')">Kick</button>
-        `;
-        userList.appendChild(li);
-      });
-    });
+    // ✅ Utility: Show message
+    function showMessage(message, type = "success") {
+      const msg = document.getElementById("status-message");
+      msg.textContent = message;
+      msg.className = `text-sm text-center mb-4 ${
+        type === "success" ? "text-green-400" : "text-red-400"
+      }`;
+      setTimeout(() => (msg.textContent = ""), 4000);
+    }
 
-    // Expose kick function
-    window.kickUser = (uid) => {
-      remove(ref(db, "users/" + uid));
-      alert("User kicked!");
-    };
-
-    // Admin actions
-    document.getElementById("admin-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("admin-email").value.toLowerCase();
-      const action = document.getElementById("admin-action").value;
-      const reason = document.getElementById("ban-reason").value.trim();
-      const safeEmail = email.replace(/\./g, ",");
-
-      if (action === "ban") {
-        await set(ref(db, "banned/" + safeEmail), reason || "No reason provided.");
-        alert("User banned.");
-      } else if (action === "unban") {
-        await remove(ref(db, "banned/" + safeEmail));
-        alert("User unbanned.");
-      } else if (action === "kick") {
-        onValue(usersRef, (snapshot) => {
-          snapshot.forEach((child) => {
-            if (child.val().email.toLowerCase() === email) {
-              remove(ref(db, "users/" + child.key));
-              alert("User kicked.");
-            }
-          });
-        }, { onlyOnce: true });
+    // ✅ Auth check
+    onAuthStateChanged(auth, (user) => {
+      if (!user || user.email.toLowerCase() !== "noahwilfred2022@gmail.com") {
+        window.location.href = "dashboard.html";
       }
     });
+
+    // ✅ Show active users
+    const activeUsersRef = ref(db, "activeUsers");
+    const activeUsersList = document.getElementById("active-users");
+
+    onValue(activeUsersRef, (snapshot) => {
+      activeUsersList.innerHTML = "";
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).forEach((uid) => {
+          const { email, page } = data[uid];
+          const li = document.createElement("li");
+          li.textContent = `${email} - ${page}`;
+          activeUsersList.appendChild(li);
+        });
+      } else {
+        activeUsersList.innerHTML = `<li class="text-gray-400 italic">No active users</li>`;
+      }
+    });
+
+    // ✅ Kick user
+    document.getElementById("kick-btn").addEventListener("click", () => {
+      const email = document.getElementById("target-email").value.trim().toLowerCase();
+      if (!email) return showMessage("Enter an email", "error");
+
+      const kickRef = ref(db, `kicks/${email.replace(/\./g, "_")}`);
+      set(kickRef, true)
+        .then(() => showMessage("User kicked"))
+        .catch(() => showMessage("Failed to kick user", "error"));
+    });
+
+    // ✅ Ban user
+    document.getElementById("ban-btn").addEventListener("click", () => {
+      const email = document.getElementById("target-email").value.trim().toLowerCase();
+      if (!email) return showMessage("Enter an email", "error");
+
+      const reason = prompt("Enter ban reason:");
+      if (!reason) return;
+
+      const banRef = ref(db, `bans/${email.replace(/\./g, "_")}`);
+      set(banRef, { reason })
+        .then(() => showMessage("User banned"))
+        .catch(() => showMessage("Failed to ban user", "error"));
+    });
+
+    // ✅ Unban user
+    document.getElementById("unban-btn").addEventListener("click", () => {
+      const email = document.getElementById("target-email").value.trim().toLowerCase();
+      if (!email) return showMessage("Enter an email", "error");
+
+      const banRef = ref(db, `bans/${email.replace(/\./g, "_")}`);
+      remove(banRef)
+        .then(() => showMessage("User unbanned"))
+        .catch(() => showMessage("Failed to unban user", "error"));
+    });
   </script>
+
 </body>
 </html>
